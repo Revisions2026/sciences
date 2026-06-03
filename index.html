@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brevet 3e — Physique-Chimie</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --card2: #22263a;
+    --border: #2e3350;
+    --text: #e8eaf6;
+    --muted: #8b90b0;
+    --easy: #22c55e;
+    --easy-bg: #052b14;
+    --inter: #f59e0b;
+    --inter-bg: #2b1900;
+    --hard: #ef4444;
+    --hard-bg: #2b0606;
+    --accent: #6366f1;
+    --accent2: #a855f7;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --radius: 16px;
+    --shadow: 0 4px 32px #0006;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+    background-image: radial-gradient(ellipse at 20% 0%, #1e1b4b55 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 100%, #2e1065aa 0%, transparent 60%);
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeDown .5s ease;
+  }
+  .header .emoji-title { font-size: 2.8rem; }
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #818cf8, #a78bfa, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+    margin-top: 4px;
+  }
+  .header p { color: var(--muted); font-size: .95rem; margin-top: 8px; }
+
+  /* SCREENS */
+  .screen { display: none; width: 100%; max-width: 700px; animation: fadeUp .4s ease; }
+  .screen.active { display: block; }
+
+  /* LEVEL SELECTOR */
+  .level-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  @media (max-width: 520px) { .level-grid { grid-template-columns: 1fr; } }
+  .level-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--card);
+    transition: transform .2s, border-color .2s, background .2s;
+    user-select: none;
+  }
+  .level-card:hover { transform: translateY(-4px); }
+  .level-card[data-level="facile"]:hover { border-color: var(--easy); background: var(--easy-bg); }
+  .level-card[data-level="intermediaire"]:hover { border-color: var(--inter); background: var(--inter-bg); }
+  .level-card[data-level="difficile"]:hover { border-color: var(--hard); background: var(--hard-bg); }
+  .level-card .lv-icon { font-size: 2.5rem; }
+  .level-card h2 { font-size: 1.15rem; font-weight: 800; margin-top: 10px; }
+  .level-card p { font-size: .82rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  .level-card[data-level="facile"] h2 { color: var(--easy); }
+  .level-card[data-level="intermediaire"] h2 { color: var(--inter); }
+  .level-card[data-level="difficile"] h2 { color: var(--hard); }
+
+  .home-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+  }
+  .home-card h2 { font-size: 1.1rem; color: var(--muted); font-weight: 700; margin-bottom: 8px; letter-spacing: .05em; text-transform: uppercase; font-size: .8rem; }
+
+  /* QUIZ SCREEN */
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .q-counter {
+    font-size: .9rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .q-counter span { color: var(--text); font-size: 1.1rem; }
+  .level-badge {
+    padding: 4px 14px;
+    border-radius: 99px;
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .level-badge.facile { background: var(--easy-bg); color: var(--easy); border: 1px solid var(--easy); }
+  .level-badge.intermediaire { background: var(--inter-bg); color: var(--inter); border: 1px solid var(--inter); }
+  .level-badge.difficile { background: var(--hard-bg); color: var(--hard); border: 1px solid var(--hard); }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #a855f7);
+    border-radius: 99px;
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .question-theme {
+    font-size: .78rem;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 10px;
+  }
+  .question-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  /* DRAG ZONE */
+  .drag-instructions {
+    font-size: .82rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .choices-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 20px;
+    min-height: 60px;
+  }
+  .choice-block {
+    background: var(--card2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+    box-shadow: 0 2px 8px #0004;
+    text-align: center;
+    max-width: 220px;
+  }
+  .choice-block:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 20px #6366f133; }
+  .choice-block.dragging { opacity: .5; transform: scale(1.05); cursor: grabbing; }
+  .choice-block.placed { display: none; }
+
+  .drop-zone {
+    border: 2.5px dashed var(--border);
+    border-radius: var(--radius);
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--muted);
+    font-size: .9rem;
+    margin-bottom: 20px;
+    transition: border-color .2s, background .2s;
+    padding: 12px;
+    position: relative;
+  }
+  .drop-zone.over { border-color: var(--accent); background: #6366f111; }
+  .drop-zone.filled { border-style: solid; border-color: var(--accent2); background: #7c3aed22; }
+  .drop-zone .placed-block {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-weight: 800;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .drop-zone .placed-block .remove-btn {
+    background: #ffffff33;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s, opacity .15s;
+  }
+  .btn:hover { transform: translateY(-2px); opacity: .92; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: #fff;
+  }
+  .btn-next {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+  }
+
+  /* FEEDBACK */
+  .feedback-box {
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    display: none;
+    animation: fadeUp .3s ease;
+  }
+  .feedback-box.correct { background: #052b1488; border: 1.5px solid var(--correct); }
+  .feedback-box.wrong { background: #2b060688; border: 1.5px solid var(--wrong); }
+  .feedback-box .fb-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+  .feedback-box.correct .fb-top { color: var(--correct); }
+  .feedback-box.wrong .fb-top { color: var(--wrong); }
+  .feedback-box .fb-answer { font-size: .88rem; color: var(--muted); margin-bottom: 6px; }
+  .feedback-box .fb-answer strong { color: var(--text); }
+  .feedback-box .fb-explanation { font-size: .88rem; line-height: 1.55; color: var(--text); border-top: 1px solid #ffffff11; padding-top: 10px; margin-top: 10px; }
+
+  /* RESULTS */
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .result-emoji { font-size: 4rem; }
+  .result-title { font-size: 1.6rem; font-weight: 900; margin: 12px 0 4px; }
+  .score-display {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin: 16px 0;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .score-display span { font-size: 1.5rem; color: var(--muted); -webkit-text-fill-color: var(--muted); }
+  .result-message { color: var(--muted); font-size: .95rem; margin-bottom: 24px; line-height: 1.5; }
+  .result-bar-wrap { background: var(--border); border-radius: 99px; height: 12px; margin: 0 auto 24px; max-width: 320px; overflow: hidden; }
+  .result-bar { height: 100%; border-radius: 99px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+  .btn-restart {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  .btn-home {
+    background: var(--card2);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+
+  @keyframes fadeUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+  @keyframes fadeDown { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
+
+  /* Touch drag clone */
+  #touch-clone {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: .85;
+    transform: scale(1.08);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="emoji-title">⚗️🔬</div>
+  <h1>Brevet 3e<br>Physique-Chimie</h1>
+  <p>Entraîne-toi pour le Brevet des Collèges !</p>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-card">
+    <h2>Choisis ton niveau</h2>
+    <div class="level-grid">
+      <div class="level-card" data-level="facile">
+        <div class="lv-icon">🌱</div>
+        <h2>Facile</h2>
+        <p>Notions fondamentales, définitions et formules de base.</p>
+      </div>
+      <div class="level-card" data-level="intermediaire">
+        <div class="lv-icon">⚡</div>
+        <h2>Intermédiaire</h2>
+        <p>Application des formules et compréhension des phénomènes.</p>
+      </div>
+      <div class="level-card" data-level="difficile">
+        <div class="lv-icon">🔥</div>
+        <h2>Difficile</h2>
+        <p>Raisonnement, calculs et questions de type brevet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-header">
+    <div class="q-counter">Question <span id="q-num">1</span> / 10</div>
+    <div class="level-badge" id="level-badge">Facile</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:10%"></div></div>
+
+  <div class="question-card">
+    <div class="question-theme" id="q-theme">Thème</div>
+    <div class="question-text" id="q-text">Question ici</div>
+  </div>
+
+  <p class="drag-instructions">👆 Glisse ta réponse dans la zone ci-dessous</p>
+  <div class="choices-area" id="choices-area"></div>
+
+  <div class="drop-zone" id="drop-zone">
+    <span id="drop-placeholder">Dépose ta réponse ici…</span>
+  </div>
+
+  <div class="feedback-box" id="feedback-box">
+    <div class="fb-top" id="fb-top"></div>
+    <div class="fb-answer" id="fb-answer"></div>
+    <div class="fb-explanation" id="fb-explanation"></div>
+  </div>
+
+  <button class="btn btn-primary" id="btn-validate" disabled>Valider ma réponse</button>
+  <button class="btn btn-next" id="btn-next" style="display:none;margin-top:12px">Question suivante →</button>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="result-card">
+    <div class="result-emoji" id="result-emoji">🎉</div>
+    <div class="result-title" id="result-title">Excellent !</div>
+    <div class="score-display" id="score-display">8 <span>/ 10</span></div>
+    <div class="result-bar-wrap"><div class="result-bar" id="result-bar"></div></div>
+    <p class="result-message" id="result-message"></p>
+    <button class="btn btn-restart btn-primary" id="btn-restart">🔄 Rejouer</button>
+    <button class="btn btn-home" id="btn-home">🏠 Choisir un autre niveau</button>
+  </div>
+</div>
+
+<div id="touch-clone"></div>
+
+<script>
+// ===================== QUESTION BANK =====================
+const QUESTIONS = {
+  facile: [
+    {
+      theme: "🌌 Univers et Système Solaire",
+      text: "Combien de planètes composent notre système solaire ?",
+      choices: ["8 planètes", "9 planètes", "12 planètes"],
+      correct: 0,
+      explanation: "Depuis 2006, le système solaire compte officiellement 8 planètes : Mercure, Vénus, Terre, Mars, Jupiter, Saturne, Uranus et Neptune. Pluton a été reclassée en « planète naine »."
+    },
+    {
+      theme: "⚡ Électricité",
+      text: "Quelle est l'unité de l'intensité électrique ?",
+      choices: ["L'ampère (A)", "Le volt (V)", "Le watt (W)"],
+      correct: 0,
+      explanation: "L'intensité électrique I se mesure en ampères (A). Le volt (V) mesure la tension, et le watt (W) mesure la puissance électrique."
+    },
+    {
+      theme: "⚛️ Atomes et Molécules",
+      text: "Quelle est la charge électrique d'un électron ?",
+      choices: ["Négative (–)", "Positive (+)", "Nulle (0)"],
+      correct: 0,
+      explanation: "L'électron porte une charge négative. Le proton porte une charge positive et le neutron est électriquement neutre. Un atome est neutre car il possède autant d'électrons que de protons."
+    },
+    {
+      theme: "🧪 Transformations Chimiques",
+      text: "Quelle valeur de pH correspond à une solution neutre ?",
+      choices: ["pH = 7", "pH = 0", "pH = 14"],
+      correct: 0,
+      explanation: "Le pH est l'indicateur d'acidité. pH = 7 correspond à la neutralité (eau pure). pH < 7 : solution acide. pH > 7 : solution basique (alcaline)."
+    },
+    {
+      theme: "🏃 Mouvements et Forces",
+      text: "Par quoi représente-t-on une force en physique ?",
+      choices: ["Une flèche (vecteur)", "Un cercle", "Un nombre"],
+      correct: 0,
+      explanation: "Une force est un vecteur représenté par une flèche. Cette flèche indique le point d'application, la direction, le sens et l'intensité (longueur) de la force."
+    },
+    {
+      theme: "🌍 Énergie",
+      text: "Laquelle de ces sources d'énergie est renouvelable ?",
+      choices: ["L'énergie solaire", "Le pétrole", "Le charbon"],
+      correct: 0,
+      explanation: "L'énergie solaire est renouvelable car le Soleil est une source inépuisable à l'échelle humaine. Le pétrole et le charbon sont des énergies fossiles non renouvelables."
+    },
+    {
+      theme: "🌈 Ondes et Lumière",
+      text: "Quelle est la vitesse de la lumière dans le vide ?",
+      choices: ["300 000 km/s", "30 000 km/s", "3 000 km/s"],
+      correct: 0,
+      explanation: "La lumière se propage à 300 000 km/s dans le vide. Cette valeur, notée c, est une constante fondamentale de la physique utilisée pour calculer les distances astronomiques."
+    },
+    {
+      theme: "⚛️ Atomes et Molécules",
+      text: "Qu'est-ce qu'un ion ?",
+      choices: ["Un atome ayant gagné ou perdu des électrons", "Un atome avec un noyau différent", "Une molécule chargée"],
+      correct: 0,
+      explanation: "Un ion est un atome (ou groupe d'atomes) qui a gagné ou perdu un ou plusieurs électrons. S'il a perdu des électrons, il est positif (cation). S'il en a gagné, il est négatif (anion)."
+    },
+    {
+      theme: "🚴 Énergie et Vitesse",
+      text: "De quoi dépend l'énergie cinétique d'un objet ?",
+      choices: ["De sa masse et de sa vitesse", "De sa hauteur", "De sa température"],
+      correct: 0,
+      explanation: "L'énergie cinétique est liée au mouvement : Ec = ½ × m × v². Elle dépend de la masse m (en kg) et du carré de la vitesse v (en m/s). Elle est nulle quand l'objet est immobile."
+    },
+    {
+      theme: "🔊 Ondes Sonores",
+      text: "Quel est le domaine de fréquences audible par l'être humain ?",
+      choices: ["20 Hz à 20 000 Hz", "0 Hz à 100 Hz", "100 Hz à 100 000 Hz"],
+      correct: 0,
+      explanation: "L'oreille humaine perçoit les sons entre 20 Hz et 20 000 Hz (20 kHz). En dessous de 20 Hz : infrasons. Au-dessus de 20 kHz : ultrasons, inaudibles pour l'humain."
+    },
+    {
+      theme: "⚡ Électricité",
+      text: "Comment calcule-t-on la puissance électrique ?",
+      choices: ["P = U × I", "P = U + I", "P = U / I"],
+      correct: 0,
+      explanation: "La puissance électrique P (en watts W) se calcule avec P = U × I, où U est la tension en volts (V) et I l'intensité en ampères (A). Exemple : une ampoule sous 230 V absorbant 0,5 A consomme 115 W."
+    },
+    {
+      theme: "🌌 Univers",
+      text: "Qu'est-ce qu'une année-lumière ?",
+      choices: ["Une unité de distance", "Une unité de temps", "Une unité de masse"],
+      correct: 0,
+      explanation: "L'année-lumière est une unité de DISTANCE. C'est la distance parcourue par la lumière en un an, soit environ 9 460 milliards de kilomètres. Elle sert à mesurer les distances astronomiques."
+    }
+  ],
+  intermediaire: [
+    {
+      theme: "⚡ Électricité",
+      text: "Un radiateur électrique fonctionne sous 230 V avec une intensité de 4 A. Quelle est sa puissance ?",
+      choices: ["920 W", "57,5 W", "234 W"],
+      correct: 0,
+      explanation: "On applique P = U × I = 230 × 4 = 920 W. Cette puissance est typique d'un petit radiateur électrique. Connaître cette formule est indispensable pour le brevet !"
+    },
+    {
+      theme: "🧪 Transformations Chimiques",
+      text: "Lors d'une réaction chimique, que peut-on dire de la masse totale ?",
+      choices: ["Elle se conserve (loi de Lavoisier)", "Elle diminue car des gaz s'échappent", "Elle augmente avec la chaleur"],
+      correct: 0,
+      explanation: "C'est la loi de conservation de la masse (Lavoisier, 1789) : « Rien ne se perd, rien ne se crée, tout se transforme ». La masse des réactifs = masse des produits. Les atomes sont simplement réorganisés."
+    },
+    {
+      theme: "🏃 Mouvements et Forces",
+      text: "Un objet de 2 kg est soumis à la pesanteur (g = 10 N/kg). Quel est son poids ?",
+      choices: ["20 N", "2 N", "0,2 N"],
+      correct: 0,
+      explanation: "Le poids se calcule avec P = m × g = 2 × 10 = 20 N. Le poids est une force, il s'exprime en newtons (N). La masse (en kg) est une propriété intrinsèque de l'objet, le poids dépend du champ de pesanteur."
+    },
+    {
+      theme: "⚛️ Atomes et Molécules",
+      text: "Un atome de carbone a un numéro atomique Z = 6. Combien possède-t-il d'électrons ?",
+      choices: ["6 électrons", "12 électrons", "3 électrons"],
+      correct: 0,
+      explanation: "Le numéro atomique Z correspond au nombre de protons. Un atome étant électriquement neutre, il possède autant d'électrons que de protons. Donc Z = 6 protons = 6 électrons."
+    },
+    {
+      theme: "🚴 Énergie Cinétique",
+      text: "Un cycliste de masse 70 kg roule à 10 m/s. Quelle est son énergie cinétique ?",
+      choices: ["3 500 J", "700 J", "7 000 J"],
+      correct: 0,
+      explanation: "Ec = ½ × m × v² = ½ × 70 × 10² = ½ × 70 × 100 = 3 500 J. L'énergie cinétique dépend du carré de la vitesse, donc doubler la vitesse multiplie l'énergie cinétique par 4 !"
+    },
+    {
+      theme: "🌍 Énergie",
+      text: "Un appareil de 100 W fonctionne pendant 30 minutes. Quelle énergie consomme-t-il ?",
+      choices: ["180 000 J", "3 000 J", "30 000 J"],
+      correct: 0,
+      explanation: "E = P × t. Attention à convertir le temps en secondes : 30 min = 1800 s. E = 100 × 1800 = 180 000 J = 180 kJ. On peut aussi exprimer en Wh : 100 W × 0,5 h = 50 Wh."
+    },
+    {
+      theme: "🌌 Univers",
+      text: "Il y a combien d'années le Big Bang a-t-il eu lieu ?",
+      choices: ["Environ 13,8 milliards d'années", "Environ 4,5 milliards d'années", "Environ 1 milliard d'années"],
+      correct: 0,
+      explanation: "Selon les observations scientifiques (fond diffus cosmologique, expansion de l'Univers), le Big Bang a eu lieu il y a environ 13,8 milliards d'années. La Terre, elle, est âgée d'environ 4,5 milliards d'années."
+    },
+    {
+      theme: "🧪 pH et Acidité",
+      text: "On mesure le pH d'un jus de citron et on trouve pH = 2,5. Que peut-on dire ?",
+      choices: ["C'est une solution acide", "C'est une solution basique", "C'est une solution neutre"],
+      correct: 0,
+      explanation: "Un pH < 7 indique une solution acide. pH = 2,5 est très acide (les acides forts ont un pH proche de 0). Le jus de citron contient de l'acide citrique, ce qui lui donne ce pH bas."
+    },
+    {
+      theme: "🔊 Ondes et Fréquences",
+      text: "Un chien peut entendre un sifflet à 25 kHz. Pour l'humain, ce son est-il audible ?",
+      choices: ["Non, c'est un ultrason (> 20 kHz)", "Oui, c'est dans le domaine audible", "Non, c'est un infrason (< 20 Hz)"],
+      correct: 0,
+      explanation: "25 kHz = 25 000 Hz, ce qui dépasse la limite supérieure de l'audition humaine (20 000 Hz). C'est donc un ultrason, inaudible pour nous mais perçu par les chiens et certains animaux."
+    },
+    {
+      theme: "🏃 Trajectoire",
+      text: "Une voiture fait le tour d'un circuit ovale. Quel type de mouvement effectue-t-elle ?",
+      choices: ["Mouvement curviligne", "Mouvement rectiligne uniforme", "Mouvement vertical"],
+      correct: 0,
+      explanation: "La voiture suit une trajectoire courbe (ovale), c'est donc un mouvement curviligne. Un mouvement rectiligne a une trajectoire en ligne droite. Un mouvement circulaire a une trajectoire en cercle."
+    },
+    {
+      theme: "⚡ Énergie Électrique",
+      text: "Laquelle de ces transformations d'énergie se produit dans une ampoule électrique ?",
+      choices: ["Électrique → Lumineuse + Thermique", "Thermique → Électrique", "Chimique → Mécanique"],
+      correct: 0,
+      explanation: "Dans une ampoule, l'énergie électrique est convertie en lumière (énergie lumineuse) et en chaleur (énergie thermique). L'énergie se transforme mais ne disparaît jamais — c'est le principe de conservation de l'énergie."
+    },
+    {
+      theme: "⚛️ Molécules",
+      text: "Qu'est-ce qu'une molécule d'eau (H₂O) ?",
+      choices: ["2 atomes d'hydrogène + 1 atome d'oxygène", "2 atomes d'oxygène + 1 atome d'hydrogène", "3 atomes d'hydrogène"],
+      correct: 0,
+      explanation: "H₂O signifie 2 atomes d'Hydrogène (H) et 1 atome d'Oxygène (O). La formule chimique indique la nature et le nombre d'atomes de chaque élément dans une molécule."
+    }
+  ],
+  difficile: [
+    {
+      theme: "🏃 Cinématique",
+      text: "Une voiture parcourt 120 km en 1h30. Quelle est sa vitesse moyenne en km/h ?",
+      choices: ["80 km/h", "90 km/h", "60 km/h"],
+      correct: 0,
+      explanation: "v = d / t. Il faut convertir 1h30 en heures décimales : 1,5 h. v = 120 / 1,5 = 80 km/h. Attention à toujours exprimer t dans la même unité que celle attendue pour v."
+    },
+    {
+      theme: "⚛️ Structure de l'Atome",
+      text: "L'atome de sodium est noté ²³₁₁Na. Combien de neutrons possède-t-il ?",
+      choices: ["12 neutrons", "11 neutrons", "23 neutrons"],
+      correct: 0,
+      explanation: "Le nombre de neutrons = nombre de masse A − numéro atomique Z. Ici : 23 − 11 = 12 neutrons. Z = 11 protons = 11 électrons (atome neutre). A = 23 nucléons (protons + neutrons)."
+    },
+    {
+      theme: "⚡ Loi d'Ohm",
+      text: "Un dipôle résistif obéit à U = R × I. Quelle est la résistance d'un fil sous 12 V parcouru par 0,5 A ?",
+      choices: ["24 Ω", "6 Ω", "0,04 Ω"],
+      correct: 0,
+      explanation: "D'après la loi d'Ohm : R = U / I = 12 / 0,5 = 24 Ω. La résistance s'exprime en ohms (Ω). Cette loi s'applique aux résistances à température constante. On peut aussi écrire I = U/R ou U = R × I."
+    },
+    {
+      theme: "🔊 Acoustique",
+      text: "Quel dispositif médical utilise les ultrasons pour visualiser un fœtus ?",
+      choices: ["L'échographie", "La radiographie", "L'IRM"],
+      correct: 0,
+      explanation: "L'échographie exploite les ultrasons (> 20 kHz) : des ondes sonores à haute fréquence sont émises, rebondissent sur les tissus et l'écho est analysé pour former une image. C'est non ionisant, donc sans danger."
+    },
+    {
+      theme: "🧪 Conservation de la Masse",
+      text: "Dans une équation chimique équilibrée : 2 H₂ + O₂ → 2 H₂O. Combien d'atomes d'hydrogène sont produits ?",
+      choices: ["4 atomes H", "2 atomes H", "6 atomes H"],
+      correct: 0,
+      explanation: "2 H₂O contient 2 × 2 = 4 atomes d'hydrogène. C'est cohérent car à gauche : 2 H₂ = 4 atomes H. L'équation est équilibrée : le nombre d'atomes de chaque élément est le même des deux côtés."
+    },
+    {
+      theme: "🌍 Transformation d'Énergie",
+      text: "Un panneau solaire photovoltaïque réalise quelle conversion d'énergie ?",
+      choices: ["Lumineuse → Électrique", "Thermique → Mécanique", "Chimique → Électrique"],
+      correct: 0,
+      explanation: "Un panneau photovoltaïque convertit directement l'énergie lumineuse du Soleil en énergie électrique grâce à l'effet photoélectrique. C'est différent du capteur solaire thermique qui chauffe un fluide."
+    },
+    {
+      theme: "🚴 Énergie Potentielle",
+      text: "Ep = m × g × h. Un objet de 5 kg est à 10 m de hauteur (g = 10 N/kg). Quelle est son énergie potentielle ?",
+      choices: ["500 J", "50 J", "5 000 J"],
+      correct: 0,
+      explanation: "Ep = m × g × h = 5 × 10 × 10 = 500 J. L'énergie potentielle de pesanteur dépend de la masse, du champ de pesanteur g et de la hauteur. Si l'objet tombe, cette énergie se transforme en énergie cinétique."
+    },
+    {
+      theme: "⚛️ Ions",
+      text: "L'ion calcium Ca²⁺ a Z = 20. Combien possède-t-il d'électrons ?",
+      choices: ["18 électrons", "20 électrons", "22 électrons"],
+      correct: 0,
+      explanation: "Ca²⁺ signifie que l'atome de calcium a PERDU 2 électrons. Atome neutre : 20 protons = 20 électrons. Ion Ca²⁺ : 20 − 2 = 18 électrons. La charge 2+ indique bien la perte de 2 électrons (charges négatives)."
+    },
+    {
+      theme: "🌌 Distances Astronomiques",
+      text: "L'étoile Proxima Centauri est à environ 4,2 années-lumière. En kilomètres, c'est approximativement :",
+      choices: ["4 × 10¹³ km", "4 000 km", "4 × 10⁸ km"],
+      correct: 0,
+      explanation: "1 année-lumière ≈ 9,46 × 10¹² km. Donc 4,2 × 9,46 × 10¹² ≈ 4 × 10¹³ km. Ces distances immenses justifient l'utilisation de l'année-lumière plutôt que le kilomètre en astronomie."
+    },
+    {
+      theme: "🧪 Masse Volumique",
+      text: "Un liquide a une masse de 800 g pour un volume de 1 L. Quelle est sa masse volumique ?",
+      choices: ["0,8 g/mL (< eau)", "1,2 g/mL (> eau)", "8 g/mL"],
+      correct: 0,
+      explanation: "ρ = m / V = 800 g / 1000 mL = 0,8 g/mL. Comme ρ < 1 g/mL (masse volumique de l'eau), ce liquide flotte sur l'eau. C'est la masse volumique de l'huile vegetale par exemple !"
+    },
+    {
+      theme: "⚡ Puissance et Énergie",
+      text: "Quelle est la consommation annuelle en kWh d'un frigo de 150 W fonctionnant 24h/24 ?",
+      choices: ["1 314 kWh", "150 kWh", "3 600 kWh"],
+      correct: 0,
+      explanation: "E = P × t = 0,150 kW × (24 × 365 h) = 0,150 × 8 760 = 1 314 kWh/an. Le kilowattheure (kWh) est l'unité de facturation. 1 kWh = 3 600 000 J. Un frigo consomme environ 200-400 kWh/an en réalité."
+    },
+    {
+      theme: "🏃 Forces et Equilibre",
+      text: "Un livre posé sur une table est à l'équilibre. Que peut-on dire des forces qui s'exercent sur lui ?",
+      choices: ["Elles se compensent : Poids = Réaction normale", "Il n'y a pas de force appliquée", "Il y a une force motrice vers le bas uniquement"],
+      correct: 0,
+      explanation: "Un objet en équilibre est soumis à des forces qui se compensent (résultante nulle). Le poids P = m×g est dirigé vers le bas ; la réaction de la table (force normale N) est dirigée vers le haut. P = N, donc l'objet ne bouge pas."
+    }
+  ]
+};
+
+// ===================== STATE =====================
+let currentLevel = '';
+let currentQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+let selectedChoice = null;
+
+// ===================== UTILS =====================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function selectQuestions(level) {
+  const pool = shuffle(QUESTIONS[level]);
+  return pool.slice(0, 10);
+}
+
+// ===================== SCREENS =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ===================== START QUIZ =====================
+function startQuiz(level) {
+  currentLevel = level;
+  currentQuestions = selectQuestions(level);
+  currentIndex = 0;
+  score = 0;
+
+  const badge = document.getElementById('level-badge');
+  badge.className = 'level-badge ' + level;
+  const labels = {facile:'🌱 Facile', intermediaire:'⚡ Intermédiaire', difficile:'🔥 Difficile'};
+  badge.textContent = labels[level];
+
+  showScreen('quiz');
+  renderQuestion();
+}
+
+// ===================== RENDER QUESTION =====================
+function renderQuestion() {
+  answered = false;
+  selectedChoice = null;
+
+  const q = currentQuestions[currentIndex];
+  document.getElementById('q-num').textContent = currentIndex + 1;
+  document.getElementById('progress-fill').style.width = ((currentIndex + 1) / 10 * 100) + '%';
+  document.getElementById('q-theme').textContent = q.theme;
+  document.getElementById('q-text').textContent = q.text;
+
+  // Build shuffled choices but track correct answer
+  const indices = [0, 1, 2];
+  const shuffledIdx = shuffle(indices);
+  const shuffledChoices = shuffledIdx.map(i => ({text: q.choices[i], isCorrect: i === q.correct}));
+
+  const area = document.getElementById('choices-area');
+  area.innerHTML = '';
+  shuffledChoices.forEach((ch, i) => {
+    const block = document.createElement('div');
+    block.className = 'choice-block';
+    block.textContent = ch.text;
+    block.dataset.correct = ch.isCorrect;
+    block.dataset.idx = i;
+    setupDrag(block);
+    area.appendChild(block);
+  });
+
+  // Reset drop zone
+  const dz = document.getElementById('drop-zone');
+  dz.innerHTML = '<span id="drop-placeholder">Dépose ta réponse ici…</span>';
+  dz.classList.remove('filled', 'over');
+
+  // Feedback
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'none';
+  fb.className = 'feedback-box';
+
+  document.getElementById('btn-validate').disabled = true;
+  document.getElementById('btn-validate').style.display = 'block';
+  document.getElementById('btn-next').style.display = 'none';
+
+  setupDropZone();
+}
+
+// ===================== DRAG & DROP (Mouse + Touch) =====================
+let draggingEl = null;
+let touchClone = null;
+let touchOffX = 0, touchOffY = 0;
+
+function setupDrag(el) {
+  // Mouse
+  el.addEventListener('mousedown', onMouseDown);
+  // Touch
+  el.addEventListener('touchstart', onTouchStart, {passive: false});
+}
+
+function onMouseDown(e) {
+  if (answered) return;
+  e.preventDefault();
+  draggingEl = e.currentTarget;
+  draggingEl.classList.add('dragging');
+  document.addEventListener('mouseup', onMouseUp);
+  document.addEventListener('mousemove', onMouseMove);
+}
+
+function onMouseMove(e) {
+  // visual handled by browser default ghost unless needed
+}
+
+function onMouseUp(e) {
+  document.removeEventListener('mouseup', onMouseUp);
+  document.removeEventListener('mousemove', onMouseMove);
+  if (!draggingEl) return;
+  draggingEl.classList.remove('dragging');
+
+  const dz = document.getElementById('drop-zone');
+  const rect = dz.getBoundingClientRect();
+  if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+    placeInDropZone(draggingEl);
+  }
+  draggingEl = null;
+}
+
+function onTouchStart(e) {
+  if (answered) return;
+  e.preventDefault();
+  draggingEl = e.currentTarget;
+  const touch = e.touches[0];
+  const rect = draggingEl.getBoundingClientRect();
+  touchOffX = touch.clientX - rect.left;
+  touchOffY = touch.clientY - rect.top;
+
+  touchClone = document.getElementById('touch-clone');
+  touchClone.textContent = draggingEl.textContent;
+  touchClone.style.cssText = `
+    position:fixed; pointer-events:none; z-index:9999; opacity:.85;
+    background:#4f46e5; color:#fff; border-radius:12px; padding:12px 18px;
+    font-family:'Nunito',sans-serif; font-size:.95rem; font-weight:700;
+    box-shadow:0 8px 24px #0006; left:${touch.clientX - touchOffX}px; top:${touch.clientY - touchOffY}px;
+  `;
+  draggingEl.style.opacity = '.3';
+
+  document.addEventListener('touchmove', onTouchMove, {passive: false});
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  touchClone.style.left = (touch.clientX - touchOffX) + 'px';
+  touchClone.style.top = (touch.clientY - touchOffY) + 'px';
+
+  const dz = document.getElementById('drop-zone');
+  const rect = dz.getBoundingClientRect();
+  if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+    dz.classList.add('over');
+  } else {
+    dz.classList.remove('over');
+  }
+}
+
+function onTouchEnd(e) {
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend', onTouchEnd);
+  if (!draggingEl) return;
+  draggingEl.style.opacity = '';
+  touchClone.style.cssText = 'display:none';
+
+  const touch = e.changedTouches[0];
+  const dz = document.getElementById('drop-zone');
+  const rect = dz.getBoundingClientRect();
+  if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+    placeInDropZone(draggingEl);
+  }
+  dz.classList.remove('over');
+  draggingEl = null;
+}
+
+function placeInDropZone(el) {
+  const dz = document.getElementById('drop-zone');
+  // Return previous placed block if any
+  const prev = dz.querySelector('.placed-block');
+  if (prev) {
+    const prevIdx = prev.dataset.srcIdx;
+    const src = document.querySelector(`.choice-block[data-idx="${prevIdx}"]`);
+    if (src) { src.classList.remove('placed'); src.style.display = ''; }
+  }
+
+  el.classList.add('placed');
+
+  dz.innerHTML = '';
+  dz.classList.add('filled');
+  dz.classList.remove('over');
+
+  const inner = document.createElement('div');
+  inner.className = 'placed-block';
+  inner.dataset.srcIdx = el.dataset.idx;
+  inner.dataset.correct = el.dataset.correct;
+
+  const txt = document.createElement('span');
+  txt.textContent = el.textContent;
+  inner.appendChild(txt);
+
+  const rm = document.createElement('button');
+  rm.className = 'remove-btn';
+  rm.innerHTML = '✕';
+  rm.onclick = () => removeFromDropZone(el.dataset.idx);
+  inner.appendChild(rm);
+
+  dz.appendChild(inner);
+  selectedChoice = el.dataset.correct === 'true';
+  document.getElementById('btn-validate').disabled = false;
+}
+
+function removeFromDropZone(srcIdx) {
+  const el = document.querySelector(`.choice-block[data-idx="${srcIdx}"]`);
+  if (el) { el.classList.remove('placed'); el.style.display = ''; }
+  const dz = document.getElementById('drop-zone');
+  dz.innerHTML = '<span id="drop-placeholder">Dépose ta réponse ici…</span>';
+  dz.classList.remove('filled');
+  selectedChoice = null;
+  document.getElementById('btn-validate').disabled = true;
+}
+
+function setupDropZone() {
+  const dz = document.getElementById('drop-zone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('over');
+    if (draggingEl) placeInDropZone(draggingEl);
+  });
+}
+
+// ===================== VALIDATE =====================
+document.getElementById('btn-validate').addEventListener('click', () => {
+  if (answered || selectedChoice === null) return;
+  answered = true;
+
+  const q = currentQuestions[currentIndex];
+  const correct = selectedChoice === true;
+  if (correct) score++;
+
+  // Show feedback
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'block';
+  fb.className = 'feedback-box ' + (correct ? 'correct' : 'wrong');
+
+  document.getElementById('fb-top').innerHTML = correct
+    ? '✅ Bonne réponse !'
+    : '❌ Mauvaise réponse…';
+
+  if (!correct) {
+    document.getElementById('fb-answer').innerHTML = `Bonne réponse : <strong>${q.choices[q.correct]}</strong>`;
+  } else {
+    document.getElementById('fb-answer').innerHTML = '';
+  }
+  document.getElementById('fb-explanation').textContent = '💡 ' + q.explanation;
+
+  // Disable dragging
+  document.querySelectorAll('.choice-block').forEach(el => el.style.cursor = 'default');
+
+  document.getElementById('btn-validate').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'block';
+  document.getElementById('btn-next').textContent =
+    currentIndex < 9 ? 'Question suivante →' : 'Voir mes résultats 🎉';
+});
+
+// ===================== NEXT =====================
+document.getElementById('btn-next').addEventListener('click', () => {
+  currentIndex++;
+  if (currentIndex >= 10) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+});
+
+// ===================== RESULTS =====================
+function showResults() {
+  showScreen('results');
+  const pct = score / 10;
+
+  let emoji, title, msg, color;
+  if (pct >= 0.9) {
+    emoji='🏆'; title='Excellent !'; color='#22c55e';
+    msg = `Tu as obtenu ${score}/10. Bravo, tu maîtrises parfaitement ce niveau ! Tu es prêt(e) pour le brevet.`;
+  } else if (pct >= 0.7) {
+    emoji='⭐'; title='Très bien !'; color='#6366f1';
+    msg = `Tu as obtenu ${score}/10. C'est un bon résultat ! Revois quelques points pour être encore plus solide.`;
+  } else if (pct >= 0.5) {
+    emoji='💪'; title='Bien joué !'; color='#f59e0b';
+    msg = `Tu as obtenu ${score}/10. Tu es sur la bonne voie ! Continue à t'entraîner pour progresser.`;
+  } else {
+    emoji='📚'; title='Continue !'; color='#ef4444';
+    msg = `Tu as obtenu ${score}/10. Pas de panique ! Relis tes fiches et recommence pour t'améliorer.`;
+  }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('score-display').innerHTML = `${score} <span>/ 10</span>`;
+  document.getElementById('result-message').textContent = msg;
+
+  const bar = document.getElementById('result-bar');
+  bar.style.width = '0%';
+  bar.style.background = color;
+  setTimeout(() => { bar.style.width = (pct * 100) + '%'; }, 100);
+}
+
+// ===================== BUTTONS =====================
+document.querySelectorAll('.level-card').forEach(card => {
+  card.addEventListener('click', () => startQuiz(card.dataset.level));
+});
+
+document.getElementById('btn-restart').addEventListener('click', () => {
+  startQuiz(currentLevel);
+});
+
+document.getElementById('btn-home').addEventListener('click', () => {
+  showScreen('home');
+});
+</script>
+</body>
+</html>
